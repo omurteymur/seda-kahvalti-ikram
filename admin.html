@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seda Kahvaltı - SEDA İkram Kartı Canlı CRM Paneli</title>
+    <style>
+        :root {
+            --primary-color: #2C5E3B;
+            --accent-color: #D4A373;
+            --bg-color: #F4F1DE;
+            --card-bg: #FFFFFF;
+            --text-color: #333333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+        .admin-container {
+            max-width: 1050px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: #E9EDC9;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-card h3 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--primary-color);
+        }
+        .stat-card p {
+            margin: 5px 0 0 0;
+            font-size: 13px;
+            color: #555;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            font-size: 13px;
+        }
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .btn-reward {
+            background-color: #D4A373;
+            color: #2C5E3B;
+            border: 1px solid #2C5E3B;
+        }
+        .btn-whatsapp {
+            background-color: #25D366;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-container">
+        <h2>Seda Kahvaltı - SEDA İkram Kartı Canlı CRM Paneli</h2>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 id="statTotal">0</h3>
+                <p>Aktif İkram Kartı Sahibi</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="statRewards">0</h3>
+                <p>İkram Kazananlar</p>
+            </div>
+            <div class="stat-card" style="background-color: #f8d7da;">
+                <h3 style="color: #721c24;" id="statInactive">0</h3>
+                <p>7 Gündür Gelmeyenler (Riskli)</p>
+            </div>
+        </div>
+
+        <div class="section-title" style="font-weight: bold; color: #2C5E3B;">Canlı Müşteri Listesi ve Kurum/Şirket Takibi</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ad Soyad</th>
+                    <th>Şirket / Kurum</th>
+                    <th>Telefon</th>
+                    <th>Toplam Menü</th>
+                    <th>Son Ziyaret</th>
+                    <th>İşlem / Damga & İkram Yönetimi</th>
+                </tr>
+            </thead>
+            <tbody id="customerTableBody">
+                <tr><td colspan="6" style="text-align:center;">Canlı veriler yükleniyor...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Firebase SDK (v10 JS Module) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBeZgDGK0X_yNHht0qqRn6iwk_zN4KGtCI",
+            authDomain: "seda-kahvalti-ikram.firebaseapp.com",
+            projectId: "seda-kahvalti-ikram",
+            storageBucket: "seda-kahvalti-ikram.firebasestorage.app",
+            messagingSenderId: "917962057856",
+            appId: "1:917962057856:web:879e424e5fa046a7f8de65",
+            measurementId: "G-FCXV353LJB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Canlı verileri doğrudan dinle
+        const customerCol = collection(db, "customers");
+
+        onSnapshot(customerCol, (snapshot) => {
+            const tbody = document.getElementById('customerTableBody');
+            tbody.innerHTML = '';
+
+            let totalCount = 0;
+            let rewardCount = 0;
+            let inactiveCount = 0;
+
+            const now = new Date();
+
+            snapshot.forEach((docSnap) => {
+                totalCount++;
+                const data = docSnap.data();
+
+                const lastVisitDate = data.lastVisit ? data.lastVisit.toDate() : new Date();
+                const diffTime = now.getTime() - lastVisitDate.getTime();
+                const diffDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+
+                const currentStamps = data.totalStamps || 0;
+
+                if (currentStamps >= 5) rewardCount++;
+                if (diffDays >= 7) inactiveCount++;
+
+                const isInactive = diffDays >= 7;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>${data.fullName || '-'}</b></td>
+                    <td>${data.company || 'Belirtilmedi'}</td>
+                    <td>${data.phone || '-'}</td>
+                    <td><b>${currentStamps > 5 ? 5 : currentStamps} / 5</b> ${currentStamps >= 5 ? '<span style="color:#BC6C25; font-weight:bold;">(İkram Hazır!)</span>' : ''}</td>
+                    <td>${diffDays === 0 ? 'Bugün' : diffDays + ' gün önce'}</td>
+                    <td>
+                        ${currentStamps >= 5 ? 
+                            `<button class="btn btn-reward" data-id="${docSnap.id}">🎁 İkram Verildi (Sıfırla)</button>` : 
+                            `<button class="btn btn-add" data-id="${docSnap.id}">+1 Menü Ekle</button>`
+                        }
+                        ${isInactive ? `<a href="https://wa.me/90${data.phoneRaw}?text=Seni%20çok%20özledik!%20Seda%20Kahvaltı'da%20en%20sevdiğin%20ev%20yemekleri%20seni%20bekliyor.%20Bu%20haftaya%20özel%20SEDA%20İkram%20Kartı'ndaki%20eksik%20damgan%20bizden%20hediye!" target="_blank" class="btn btn-whatsapp">WhatsApp</a>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('statTotal').innerText = totalCount;
+            document.getElementById('statRewards').innerText = rewardCount;
+            document.getElementById('statInactive').innerText = inactiveCount;
+
+            // Buton tıklama olaylarını bağla
+            document.querySelectorAll('.btn-add').forEach(btn => {
+                btn.onclick = async () => {
+                    const id = btn.getAttribute('data-id');
+                    const userRef = doc(db, "customers", id);
+                    await updateDoc(userRef, {
+                        totalStamps: increment(1),
+                        lastVisit: serverTimestamp()
+                    });
+                };
+            });
+
+            document.querySelectorAll('.btn-reward').forEach(btn => {
+                btn.onclick = async () => {
+                    if(confirm("Müşteriye ikram menüsü teslim edildi mi? Kart 1. damgaya çekilerek yeni döngü başlatılacak.")) {
+                        const id = btn.getAttribute('data-id');
+                        const userRef = doc(db, "customers", id);
+                        await updateDoc(userRef, {
+                            totalStamps: 1,
+                            lastVisit: serverTimestamp()
+                        });
+                    }
+                };
+            });
+        }, (error) => {
+            console.error("Firestore Hata:", error);
+            document.getElementById('customerTableBody').innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Veri çekme hatası: ${error.message}</td></tr>`;
+        });
+    </script>
+</body>
+</html>

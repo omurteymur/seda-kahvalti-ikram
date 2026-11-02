@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seda Kahvaltı - SEDA İkram Kartı</title>
+    <!-- Firebase SDK (v9/v10 Web) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBeZgDGK0X_yNHht0qqRn6iwk_zN4KGtCI",
+            authDomain: "seda-kahvalti-ikram.firebaseapp.com",
+            projectId: "seda-kahvalti-ikram",
+            storageBucket: "seda-kahvalti-ikram.firebasestorage.app",
+            messagingSenderId: "917962057856",
+            appId: "1:917962057856:web:879e424e5fa046a7f8de65",
+            measurementId: "G-FCXV353LJB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        window.serverTimestamp = serverTimestamp;
+    </script>
+    <style>
+        :root {
+            --primary-color: #2C5E3B;
+            --accent-color: #D4A373;
+            --bg-color: #F4F1DE;
+            --card-bg: #FFFFFF;
+            --text-color: #333333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            text-align: center;
+            box-sizing: border-box;
+        }
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stamps-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stamp-box {
+            aspect-ratio: 1;
+            border: 2px dashed var(--primary-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: #FAFAFA;
+            color: #888;
+        }
+        .stamp-box.filled {
+            background-color: var(--primary-color);
+            color: white;
+            border-style: solid;
+        }
+        .stamp-box.reward {
+            border-color: #BC6C25;
+            background-color: #FEFAE0;
+            font-size: 13px;
+            color: #BC6C25;
+            border-style: solid;
+            text-align: center;
+            padding: 5px;
+        }
+        .stamp-box.reward.filled {
+            background-color: #BC6C25;
+            color: white;
+        }
+        .info-text {
+            font-size: 13px;
+            color: #555;
+            margin-top: 15px;
+            background: #E9EDC9;
+            padding: 12px;
+            border-radius: 10px;
+            line-height: 1.5;
+            text-align: center;
+        }
+        .info-text .highlight {
+            display: block;
+            margin-top: 4px;
+            font-weight: bold;
+            color: #2C5E3B;
+        }
+        .user-info {
+            font-size: 12px;
+            color: #777;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .register-form {
+            text-align: left;
+        }
+        .register-form label {
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: block;
+            margin-top: 10px;
+        }
+        .register-form input[type="text"],
+        .register-form input[type="tel"] {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+        }
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background-color: #1e4229;
+        }
+        .kvkk {
+            font-size: 11px;
+            color: #777;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. ADIM: MÜŞTERİ İLK KAYIT EKRANI -->
+    <div class="container register-form" id="registerContainer">
+        <h2 style="text-align: center;">Seda Kahvaltı</h2>
+        <div class="subtitle" style="text-align: center;">SEDA İkram Kartı</div>
+        <p style="font-size: 13px; color: #666; text-align: center; margin-bottom: 20px;">İkramlarınızı tanımlamak ve kartınızı oluşturmak için bilgilerinizi girin.</p>
+        
+        <form id="userForm" onsubmit="registerUser(event)">
+            <label>Ad Soyad:</label>
+            <input type="text" id="fullName" required placeholder="Adınız Soyadınız">
+            
+            <label>Cep Telefonu:</label>
+            <input type="tel" id="phone" required placeholder="0 (5XX) XXX XX XX" maxlength="17" oninput="formatPhoneNumber(this)">
+            
+            <label>Çalıştığınız Şirket / Kurum (Opsiyonel):</label>
+            <input type="text" id="company" placeholder="Örn: X Holding / Serbest">
+            
+            <div class="kvkk">
+                <input type="checkbox" id="kvkkCheck" required> Kişisel verilerimin KVKK kapsamında işlenmesini onaylıyorum.
+            </div>
+            
+            <button type="submit" class="btn" style="margin-top: 20px;" id="submitBtn">SEDA İkram Kartımı Oluştur</button>
+        </form>
+    </div>
+
+    <!-- 2. ADIM: DİJİTAL İKRAM KARTI EKRANI -->
+    <div class="container" id="cardContainer" style="display: none;">
+        <h2>Seda Kahvaltı & Ev Yemekleri</h2>
+        <div class="subtitle">SEDA İkram Kartı</div>
+
+        <div class="user-info">
+            Müşteri: <b id="displayCustomerName">-</b> <br>
+            <span id="displayCompany" style="font-size: 11px; color: #888;"></span> <br>
+            <b>Toplam Menü:</b> <span id="stampCountText">1</span> / 5
+        </div>
+
+        <div class="stamps-grid" id="stampsGrid">
+            <div class="stamp-box" id="stamp1">1</div>
+            <div class="stamp-box" id="stamp2">2</div>
+            <div class="stamp-box" id="stamp3">3</div>
+            <div class="stamp-box" id="stamp4">4</div>
+            <div class="stamp-box" id="stamp5">5</div>
+            <div class="stamp-box reward" id="stamp6">6. İKRAM MENÜ</div>
+        </div>
+
+        <div class="info-text" id="infoText">
+            <b>Durum:</b> 5 Menü Alana 6. Menü Seda'dan İkram!
+            <span class="highlight" id="remainingText">(Hedefe kalan: 4 menü)</span>
+        </div>
+    </div>
+
+    <script>
+        function formatPhoneNumber(input) {
+            let digits = input.value.replace(/\D/g, '');
+            if (digits.startsWith('0')) digits = digits.substring(1);
+            if (digits.length > 0 && !digits.startsWith('5')) digits = '5';
+            if (digits.length > 10) digits = digits.substring(0, 10);
+
+            let formatted = '';
+            if (digits.length > 0) formatted = '0 (' + digits.substring(0, 3);
+            if (digits.length >= 3) formatted += ') ';
+            if (digits.length > 3) formatted += digits.substring(3, 6);
+            if (digits.length >= 6) formatted += ' ';
+            if (digits.length > 6) formatted += digits.substring(6, 8);
+            if (digits.length >= 8) formatted += ' ';
+            if (digits.length > 8) formatted += digits.substring(8, 10);
+
+            input.value = formatted;
+        }
+
+        async function registerUser(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "İşleniyor...";
+            btn.disabled = true;
+
+            const phoneInput = document.getElementById('phone').value;
+            const rawDigits = phoneInput.replace(/\D/g, '');
+
+            if (rawDigits.length !== 11) {
+                alert('Lütfen telefon numaranızı eksiksiz giriniz. Örn: 0 (5XX) XXX XX XX');
+                btn.innerText = "SEDA İkram Kartımı Oluştur";
+                btn.disabled = false;
+                return;
+            }
+
+            const name = document.getElementById('fullName').value;
+            const company = document.getElementById('company').value || "Belirtilmedi";
+
+            try {
+                // Firebase Firestore Kayıt / Kontrol
+                const userRef = window.doc(window.db, "customers", rawDigits);
+                const userSnap = await window.getDoc(userRef);
+
+                let currentStamps = 1;
+
+                if (userSnap.exists()) {
+                    // Mevcut Müşteri
+                    const userData = userSnap.data();
+                    currentStamps = userData.totalStamps || 1;
+                    document.getElementById('displayCustomerName').innerText = userData.fullName;
+                    document.getElementById('displayCompany').innerText = "Kurum: " + userData.company;
+                } else {
+                    // Yeni Müşteri
+                    await window.setDoc(userRef, {
+                        fullName: name,
+                        phone: phoneInput,
+                        phoneRaw: rawDigits,
+                        company: company,
+                        totalStamps: 1,
+                        lastVisit: window.serverTimestamp(),
+                        createdAt: window.serverTimestamp()
+                    });
+                    document.getElementById('displayCustomerName').innerText = name;
+                    document.getElementById('displayCompany').innerText = "Kurum: " + company;
+                }
+
+                updateUIStamps(currentStamps);
+
+                document.getElementById('registerContainer').style.display = 'none';
+                document.getElementById('cardContainer').style.display = 'block';
+
+            } catch (error) {
+                alert("Kayıt sırasında bir hata oluştu: " + error.message);
+                btn.innerText = "SEDA İkram Kartımı Oluştur";
+                btn.disabled = false;
+            }
+        }
+
+        function updateUIStamps(count) {
+            document.getElementById('stampCountText').innerText = count > 5 ? 5 : count;
+            
+            for (let i = 1; i <= 5; i++) {
+                const box = document.getElementById('stamp' + i);
+                if (i <= count) {
+                    box.classList.add('filled');
+                    box.innerText = i + ' ✓';
+                } else {
+                    box.classList.remove('filled');
+                    box.innerText = i;
+                }
+            }
+
+            const rewardBox = document.getElementById('stamp6');
+            if (count >= 6) {
+                rewardBox.classList.add('filled');
+                rewardBox.innerText = 'İKRAM KAZANILDI!';
+            } else {
+                rewardBox.classList.remove('filled');
+                rewardBox.innerText = '6. İKRAM MENÜ';
+            }
+
+            const remaining = 5 - (count > 5 ? 5 : count);
+            document.getElementById('remainingText').innerText = `(Hedefe kalan: ${remaining} menü)`;
+        }
+    </script>
+</body>
+</html>
