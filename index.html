@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SEDA İkram Kartı</title>
+  
+  <!-- Telefon Maskesi Kütüphanesi -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.8/jquery.inputmask.min.js"></script>
+
   <style>
     :root {
       --primary: #2C5E3B;
@@ -110,7 +115,6 @@
       background-color: #1e4228;
     }
 
-    /* KART GÖRÜNÜMÜ */
     .card-view {
       display: none;
     }
@@ -208,7 +212,7 @@
 
         <div class="form-group">
           <label>Cep Telefonu:</label>
-          <input type="tel" id="phone" placeholder="05XXXXXXXXX" maxlength="11" required>
+          <input type="tel" id="phone" placeholder="0 (5XX) XXX XX XX" required>
         </div>
 
         <div class="form-group">
@@ -246,11 +250,13 @@
   </div>
 
   <script>
-    // Telefon Alanı: Sadece rakam kabul eder, klavyeyi asla kilitlemez
-    const phoneInput = document.getElementById('phone');
-
-    phoneInput.addEventListener('input', (e) => {
-      e.target.value = e.target.value.replace(/\D/g, ''); // Harf veya simge yazılırsa anında temizler
+    // Telefon Alanı Maskeleme (0 (5XX) XXX XX XX)
+    $(document).ready(function(){
+      $('#phone').inputmask("0 (599) 999 99 99", {
+        clearIncomplete: false,
+        showMaskOnHover: false,
+        showMaskOnFocus: true
+      });
     });
 
     // Form Gönderimi ve Kayıt
@@ -258,11 +264,11 @@
       e.preventDefault();
 
       const fullName = document.getElementById('fullName').value.trim();
-      const rawPhone = document.getElementById('phone').value.trim();
+      const rawPhone = document.getElementById('phone').value.replace(/\D/g, '');
       const company = document.getElementById('company').value.trim() || 'Belirtilmedi';
 
-      if (rawPhone.length < 10) {
-        alert('Lütfen geçerli bir cep telefonu numarası giriniz (En az 10 haneli).');
+      if (rawPhone.length !== 11 || !rawPhone.startsWith('05')) {
+        alert('Lütfen geçerli bir cep telefonu numarası giriniz (05XX XXX XX XX).');
         return;
       }
 
