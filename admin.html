@@ -447,7 +447,6 @@
           formattedPhoneForWa = '90' + rawPhone.substring(1);
         }
 
-        // ÖZEL HATIRLATMA MESAJI
         const waText = encodeURIComponent(`Merhaba Sayın ${user.fullName}, geçen hafta kaçırdığınız menü bizden! Seda Kahvaltı & Ev Yemekleri'nde taze sofranız ve lezzetli ikramınız sizi bekliyor. Sizi yeniden aramızda görmekten mutlu oluruz. 🥘`);
         const waUrl = `https://wa.me/${formattedPhoneForWa}?text=${waText}`;
 
