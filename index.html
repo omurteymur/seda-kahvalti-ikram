@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SEDA İkram Kartı</title>
-
+  
   <style>
     :root {
       --primary: #2C5E3B;
@@ -172,8 +172,8 @@
       padding: 16px;
       margin-top: 16px;
       color: #E65100;
-      font-weight: 600;
       font-size: 14px;
+      line-height: 1.5;
     }
   </style>
 
@@ -248,40 +248,38 @@
       </div>
 
       <div id="rewardBanner" class="reward-banner">
-        🎉 Tebrikler! 5. İkramınızı kazandınız. Kasaya göstererek ikramınızı alabilirsiniz.
+        🎉 Tebrikler! <strong>İKRAM MENÜ KAZANDINIZ.</strong> Kasaya göstererek ikramınızı alabilirsiniz.
       </div>
     </div>
   </div>
 
   <script>
-    // TELEFON MASKELEME (SAF JAVASCRIPT - TAKILMA VE KİLİTLENME YAPMAZ)
     const phoneInput = document.getElementById('phone');
 
     phoneInput.addEventListener('input', (e) => {
-      let x = e.target.value.replace(/\D/g, ''); // Sadece rakamları al
+      let x = e.target.value.replace(/\D/g, '');
       if (x.length > 11) x = x.substring(0, 11);
 
       let formatted = '';
       if (x.length > 0) {
-        formatted = x.substring(0, 1); // 0
+        formatted = x.substring(0, 1);
       }
       if (x.length > 1) {
-        formatted += ' (' + x.substring(1, 4); // (5XX
+        formatted += ' (' + x.substring(1, 4);
       }
       if (x.length >= 4) {
-        formatted += ') ' + x.substring(4, 7); // ) XXX
+        formatted += ') ' + x.substring(4, 7);
       }
       if (x.length >= 7) {
-        formatted += ' ' + x.substring(7, 9); // XX
+        formatted += ' ' + x.substring(7, 9);
       }
       if (x.length >= 9) {
-        formatted += ' ' + x.substring(9, 11); // XX
+        formatted += ' ' + x.substring(9, 11);
       }
 
       e.target.value = formatted;
     });
 
-    // FORM GÖNDERİMİ VE KAYIT
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
