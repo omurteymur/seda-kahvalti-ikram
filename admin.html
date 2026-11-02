@@ -11,6 +11,8 @@
       --bg: #F4F1DE;
       --card-bg: #FFFFFF;
       --text: #333333;
+      --warning: #D97706;
+      --whatsapp: #25D366;
     }
 
     body {
@@ -39,33 +41,90 @@
       font-weight: 700;
     }
 
-    .stats {
-      font-size: 14px;
-      color: #666;
-    }
-
-    .stats span {
-      font-weight: 700;
-      color: var(--primary);
-    }
-
     .container {
       max-width: 1000px;
       margin: 0 auto;
     }
 
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background-color: var(--card-bg);
+      padding: 16px 20px;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-card .title {
+      font-size: 13px;
+      color: #666;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .stat-card .value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat-card.warning .value {
+      color: var(--warning);
+    }
+
+    .filter-bar {
+      background-color: var(--card-bg);
+      padding: 16px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+
     .search-box {
       width: 100%;
-      padding: 14px 18px;
+      padding: 12px 16px;
       border: 1.5px solid #CBD5E1;
-      border-radius: 12px;
-      font-size: 16px;
-      margin-bottom: 20px;
+      border-radius: 10px;
+      font-size: 15px;
       box-sizing: border-box;
       outline: none;
     }
 
     .search-box:focus {
+      border-color: var(--primary);
+    }
+
+    .filter-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-filter {
+      background-color: #F1F5F9;
+      color: #475569;
+      border: 1px solid #CBD5E1;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-filter.active {
+      background-color: var(--primary);
+      color: white;
       border-color: var(--primary);
     }
 
@@ -83,21 +142,33 @@
     }
 
     .customer-info h3 {
-      margin: 0 0 4px 0;
+      margin: 0 0 6px 0;
       color: var(--primary);
       font-size: 18px;
     }
 
     .customer-info p {
-      margin: 2px 0;
+      margin: 3px 0;
       font-size: 14px;
-      color: #666;
+      color: #555;
+    }
+
+    .badge-absent {
+      display: inline-block;
+      background-color: #FEF3C7;
+      color: #92400E;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-top: 4px;
     }
 
     .stamps-container {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
     .stamps-grid {
@@ -129,7 +200,7 @@
       background-color: var(--primary);
       color: white;
       border: none;
-      padding: 12px 20px;
+      padding: 12px 18px;
       border-radius: 10px;
       font-weight: 600;
       font-size: 14px;
@@ -145,12 +216,32 @@
       background-color: var(--accent);
       color: white;
       border: none;
-      padding: 12px 20px;
+      padding: 12px 18px;
       border-radius: 10px;
       font-weight: 700;
       font-size: 14px;
       cursor: pointer;
       animation: pulse 1.5s infinite;
+    }
+
+    .btn-whatsapp {
+      background-color: var(--whatsapp);
+      color: white;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .btn-whatsapp:hover {
+      opacity: 0.9;
     }
 
     @keyframes pulse {
@@ -209,11 +300,33 @@
 
   <div class="header">
     <div class="logo-title">SEDA İKRAM KARTI CRM PANENİ</div>
-    <div class="stats">Aktif İkram Kartı Sahibi: <span id="totalCustomers">0</span></div>
+    <div style="font-size: 13px; color: #666;">Canlı Müşteri Yönetim Ekranı</div>
   </div>
 
   <div class="container">
-    <input type="text" id="searchInput" class="search-box" placeholder="Müşteri Adı veya Telefon Numarası ile Ara...">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="title">Toplam Müşteri</span>
+        <span class="value" id="statTotal">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="title">İkram Hak Edenler</span>
+        <span class="value" id="statRewards">0</span>
+      </div>
+      <div class="stat-card warning">
+        <span class="title">7+ Gündür Gelmeyenler</span>
+        <span class="value" id="statAbsent">0</span>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <input type="text" id="searchInput" class="search-box" placeholder="Müşteri Adı, Telefon veya Kurum ile Ara...">
+      <div class="filter-buttons">
+        <button class="btn-filter active" onclick="setFilter('all')">Tüm Müşteriler</button>
+        <button class="btn-filter" onclick="setFilter('reward')">🎁 İkram Hak Edenler</button>
+        <button class="btn-filter" onclick="setFilter('absent')">⏰ 7+ Gündür Gelmeyenler</button>
+      </div>
+    </div>
 
     <div id="customerList">
       <div style="text-align:center; color:#888; padding:40px;">Yükleniyor...</div>
@@ -222,8 +335,8 @@
 
   <script>
     let customersData = [];
+    let currentFilter = 'all';
 
-    // SOLDA ÇATAL, ORTADA RENKLİ YEMEK TABAĞI, SAĞDA BIÇAK SVG SİMGESİ
     const plateSvg = `
       <div class="plate-icon">
         <svg width="8" height="16" viewBox="0 0 24 24" fill="none" stroke="#2C5E3B" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v20M8 2v6a4 4 0 0 0 4 4M16 2v6a4 4 0 0 1-4 4"/></svg>
@@ -241,27 +354,68 @@
           customersData.push({ id: docSnap.id, ...docSnap.data() });
         });
 
-        document.getElementById('totalCustomers').innerText = customersData.length;
-        renderCustomers(customersData);
+        updateStats(customersData);
+        applyFilters();
       });
 
-      document.getElementById('searchInput').addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase().trim();
-        const filtered = customersData.filter(c => 
-          (c.fullName && c.fullName.toLowerCase().includes(query)) ||
-          (c.phone && c.phone.includes(query)) ||
-          (c.company && c.company.toLowerCase().includes(query))
-        );
-        renderCustomers(filtered);
+      document.getElementById('searchInput').addEventListener('input', () => {
+        applyFilters();
       });
     });
+
+    function updateStats(list) {
+      document.getElementById('statTotal').innerText = list.length;
+      
+      const rewardsCount = list.filter(c => (c.stamps || 1) >= 5).length;
+      document.getElementById('statRewards').innerText = rewardsCount;
+
+      const absentCount = list.filter(c => isAbsentMoreThan7Days(c.lastVisit || c.createdAt)).length;
+      document.getElementById('statAbsent').innerText = absentCount;
+    }
+
+    function isAbsentMoreThan7Days(dateStr) {
+      if (!dateStr) return false;
+      const lastVisit = new Date(dateStr);
+      const now = new Date();
+      const diffTime = Math.abs(now - lastVisit);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays >= 7;
+    }
+
+    window.setFilter = function(filterType) {
+      currentFilter = filterType;
+      document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      applyFilters();
+    };
+
+    function applyFilters() {
+      const query = document.getElementById('searchInput').value.toLowerCase().trim();
+
+      let filtered = customersData.filter(c => {
+        const matchesQuery = (c.fullName && c.fullName.toLowerCase().includes(query)) ||
+                             (c.phone && c.phone.includes(query)) ||
+                             (c.company && c.company.toLowerCase().includes(query));
+
+        if (!matchesQuery) return false;
+
+        if (currentFilter === 'reward') {
+          return (c.stamps || 1) >= 5;
+        } else if (currentFilter === 'absent') {
+          return isAbsentMoreThan7Days(c.lastVisit || c.createdAt);
+        }
+        return true;
+      });
+
+      renderCustomers(filtered);
+    }
 
     function renderCustomers(list) {
       const container = document.getElementById('customerList');
       container.innerHTML = '';
 
       if (list.length === 0) {
-        container.innerHTML = '<div style="text-align:center; color:#888; padding:40px;">Müşteri kaydı bulunamadı.</div>';
+        container.innerHTML = '<div style="text-align:center; color:#888; padding:40px;">Kriterlere uygun müşteri kaydı bulunamadı.</div>';
         return;
       }
 
@@ -287,17 +441,34 @@
           buttonHtml = `<button class="btn-action" onclick="addStamp('${user.id}', ${stampsCount})">+1 Menü Ekle</button>`;
         }
 
+        const rawPhone = (user.phone || '').replace(/\D/g, '');
+        let formattedPhoneForWa = rawPhone;
+        if (rawPhone.startsWith('0')) {
+          formattedPhoneForWa = '90' + rawPhone.substring(1);
+        }
+
+        // ÖZEL HATIRLATMA MESAJI
+        const waText = encodeURIComponent(`Merhaba Sayın ${user.fullName}, geçen hafta kaçırdığınız menü bizden! Seda Kahvaltı & Ev Yemekleri'nde taze sofranız ve lezzetli ikramınız sizi bekliyor. Sizi yeniden aramızda görmekten mutlu oluruz. 🥘`);
+        const waUrl = `https://wa.me/${formattedPhoneForWa}?text=${waText}`;
+
+        const isAbsent = isAbsentMoreThan7Days(user.lastVisit || user.createdAt);
+        const absentBadge = isAbsent ? `<div class="badge-absent">⚠️ 7+ Gündür Ziyaret Etmedi</div>` : '';
+
         card.innerHTML = `
           <div class="customer-info">
             <h3>${user.fullName || 'İsimsiz'}</h3>
             <p>📱 Telefon: ${formatPhoneDisplay(user.phone)}</p>
             <p>🏢 Kurum: ${user.company || 'Belirtilmedi'}</p>
+            ${absentBadge}
           </div>
           <div class="stamps-container">
             <div class="stamps-grid">
               ${stampsHtml}
             </div>
             ${buttonHtml}
+            <a href="${waUrl}" target="_blank" class="btn-whatsapp" title="WhatsApp Mesajı Gönder">
+              💬 Hatırlat
+            </a>
           </div>
         `;
 
@@ -319,7 +490,8 @@
       try {
         const userRef = window.doc(window.db, "customers", userId);
         await window.updateDoc(userRef, {
-          stamps: currentStamps + 1
+          stamps: currentStamps + 1,
+          lastVisit: new Date().toISOString()
         });
       } catch (err) {
         console.error("Damga eklenemedi:", err);
@@ -332,7 +504,8 @@
         try {
           const userRef = window.doc(window.db, "customers", userId);
           await window.updateDoc(userRef, {
-            stamps: 1
+            stamps: 1,
+            lastVisit: new Date().toISOString()
           });
         } catch (err) {
           console.error("Sıfırlanamadı:", err);
