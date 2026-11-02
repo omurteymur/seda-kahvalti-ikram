@@ -4,10 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SEDA İkram Kartı</title>
-  
-  <!-- Telefon Maskesi Kütüphanesi -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.8/jquery.inputmask.min.js"></script>
 
   <style>
     :root {
@@ -220,7 +216,7 @@
 
         <div class="form-group">
           <label>Cep Telefonu:</label>
-          <input type="tel" id="phone" placeholder="0 (5XX) XXX XX XX" required>
+          <input type="tel" id="phone" placeholder="0 (5XX) XXX XX XX" maxlength="17" required>
         </div>
 
         <div class="form-group">
@@ -258,13 +254,34 @@
   </div>
 
   <script>
-    $(document).ready(function(){$('#phone').inputmask("0 (599) 999 99 99", {
-        clearIncomplete: false,
-        showMaskOnHover: false,
-        showMaskOnFocus: true
-      });
+    // TELEFON MASKELEME (SAF JAVASCRIPT - TAKILMA VE KİLİTLENME YAPMAZ)
+    const phoneInput = document.getElementById('phone');
+
+    phoneInput.addEventListener('input', (e) => {
+      let x = e.target.value.replace(/\D/g, ''); // Sadece rakamları al
+      if (x.length > 11) x = x.substring(0, 11);
+
+      let formatted = '';
+      if (x.length > 0) {
+        formatted = x.substring(0, 1); // 0
+      }
+      if (x.length > 1) {
+        formatted += ' (' + x.substring(1, 4); // (5XX
+      }
+      if (x.length >= 4) {
+        formatted += ') ' + x.substring(4, 7); // ) XXX
+      }
+      if (x.length >= 7) {
+        formatted += ' ' + x.substring(7, 9); // XX
+      }
+      if (x.length >= 9) {
+        formatted += ' ' + x.substring(9, 11); // XX
+      }
+
+      e.target.value = formatted;
     });
 
+    // FORM GÖNDERİMİ VE KAYIT
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -284,7 +301,7 @@
         fullName: fullName,
         phone: rawPhone,
         company: company,
-        stamps: 0, // Yeni kayıtlarda 0 damga ile başlar
+        stamps: 0,
         createdAt: new Date().toISOString()
       };
 
@@ -298,4 +315,62 @@
 
         listenToUserCard(userId);
       } catch (err) {
-        console.error("Kayıt hat
+        console.error("Kayıt hatası:", err);
+        alert("Bir bağlantı hatası oluştu, lütfen tekrar deneyin.");
+      }
+    });
+
+    function listenToUserCard(userId) {
+      document.getElementById('formView').style.display = 'none';
+      document.getElementById('cardView').style.display = 'block';
+
+      const userRef = window.doc(window.db, "customers", userId);
+
+      window.onSnapshot(userRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          document.getElementById('displayTitle').innerText = data.fullName;
+          document.getElementById('displayCompany').innerText = data.company;
+
+          updateStampsUI(data.stamps !== undefined ? data.stamps : 0);
+        }
+      });
+    }
+
+    const plateSvg = `
+      <div class="plate-icon">
+        <svg width="10" height="20" viewBox="0 0 24 24" fill="none" stroke="#2C5E3B" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M8 2v6a4 4 0 0 0 4 4M16 2v6a4 4 0 0 1-4 4"/></svg>
+        <span>🥘</span>
+        <svg width="10" height="20" viewBox="0 0 24 24" fill="none" stroke="#2C5E3B" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M12 2a6 6 0 0 1 6 6v4h-6"/></svg>
+      </div>
+    `;
+
+    function updateStampsUI(count) {
+      for (let i = 1; i <= 5; i++) {
+        const box = document.getElementById(`stamp${i}`);
+        if (i <= count) {
+          box.classList.add('filled');
+          box.innerHTML = plateSvg;
+        } else {
+          box.classList.remove('filled');
+          box.innerHTML = i;
+        }
+      }
+
+      const rewardBanner = document.getElementById('rewardBanner');
+      if (count >= 5) {
+        rewardBanner.style.display = 'block';
+      } else {
+        rewardBanner.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedUserId = localStorage.getItem('seda_user_id');
+      if (savedUserId) {
+        listenToUserCard(savedUserId);
+      }
+    });
+  </script>
+</body>
+</html>
