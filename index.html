@@ -195,7 +195,7 @@
 <body>
 
   <div class="container">
-    <!-- REGISTRATION FORM -->
+    <!-- KAYIT FORMU -->
     <div id="formView">
       <div class="logo-title">SEDA İKRAM KARTI</div>
       <div class="subtitle">İkramlarınızı tanımlamak ve kartınızı oluşturmak için bilgilerinizi girin.</div>
@@ -208,7 +208,7 @@
 
         <div class="form-group">
           <label>Cep Telefonu:</label>
-          <input type="tel" id="phone" placeholder="05XX XXX XX XX" maxlength="15" required>
+          <input type="tel" id="phone" placeholder="05XXXXXXXXX" maxlength="11" required>
         </div>
 
         <div class="form-group">
@@ -225,7 +225,7 @@
       </form>
     </div>
 
-    <!-- DIGITAL STAMP CARD VIEW -->
+    <!-- DİJİTAL KART GÖRÜNÜMÜ -->
     <div id="cardView" class="card-view">
       <div class="logo-title">SEDA İKRAM KARTI</div>
       <div class="user-welcome" id="displayTitle">Hoş Geldiniz</div>
@@ -246,34 +246,11 @@
   </div>
 
   <script>
-    // Telefon Alanı Silme ve Biçimlendirme Düzeltmesi
+    // Telefon Alanı: Sadece rakam kabul eder, klavyeyi asla kilitlemez
     const phoneInput = document.getElementById('phone');
-    let isDeleting = false;
-
-    phoneInput.addEventListener('keydown', (e) => {
-      isDeleting = (e.key === 'Backspace' || e.key === 'Delete');
-    });
 
     phoneInput.addEventListener('input', (e) => {
-      if (isDeleting) return; // Silme tuşuna basıldıysa müdahale etme, rahatça silsin
-
-      let val = e.target.value.replace(/\D/g, ''); // Sadece rakamları al
-      if (val.length > 11) val = val.substring(0, 11);
-
-      let formatted = '';
-      if (val.length > 0) {
-        formatted = val;
-        if (val.length > 4) {
-          formatted = val.substring(0, 4) + ' ' + val.substring(4);
-        }
-        if (val.length > 7) {
-          formatted = formatted.substring(0, 8) + ' ' + val.substring(7);
-        }
-        if (val.length > 9) {
-          formatted = formatted.substring(0, 11) + ' ' + val.substring(9);
-        }
-      }
-      e.target.value = formatted;
+      e.target.value = e.target.value.replace(/\D/g, ''); // Harf veya simge yazılırsa anında temizler
     });
 
     // Form Gönderimi ve Kayıt
@@ -281,11 +258,11 @@
       e.preventDefault();
 
       const fullName = document.getElementById('fullName').value.trim();
-      const rawPhone = document.getElementById('phone').value.replace(/\D/g, '');
+      const rawPhone = document.getElementById('phone').value.trim();
       const company = document.getElementById('company').value.trim() || 'Belirtilmedi';
 
       if (rawPhone.length < 10) {
-        alert('Lütfen geçerli bir cep telefonu numarası giriniz.');
+        alert('Lütfen geçerli bir cep telefonu numarası giriniz (En az 10 haneli).');
         return;
       }
 
