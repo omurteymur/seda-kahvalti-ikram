@@ -366,7 +366,7 @@
     function updateStats(list) {
       document.getElementById('statTotal').innerText = list.length;
       
-      const rewardsCount = list.filter(c => (c.stamps || 1) >= 5).length;
+      const rewardsCount = list.filter(c => (c.stamps || 0) >= 5).length;
       document.getElementById('statRewards').innerText = rewardsCount;
 
       const absentCount = list.filter(c => isAbsentMoreThan7Days(c.lastVisit || c.createdAt)).length;
@@ -400,7 +400,7 @@
         if (!matchesQuery) return false;
 
         if (currentFilter === 'reward') {
-          return (c.stamps || 1) >= 5;
+          return (c.stamps || 0) >= 5;
         } else if (currentFilter === 'absent') {
           return isAbsentMoreThan7Days(c.lastVisit || c.createdAt);
         }
@@ -423,7 +423,7 @@
         const card = document.createElement('div');
         card.className = 'customer-card';
 
-        const stampsCount = user.stamps || 1;
+        const stampsCount = user.stamps !== undefined ? user.stamps : 0;
         let stampsHtml = '';
 
         for (let i = 1; i <= 5; i++) {
@@ -498,12 +498,13 @@
       }
     };
 
+    // SIFIRLANDIĞINDA 0 DAMGAYA ÇEKER
     window.resetStamps = async function(userId) {
-      if (confirm('İkram müşteriye teslim edildi mi? Kart 1. damgaya sıfırlanacaktır.')) {
+      if (confirm('İkram müşteriye teslim edildi mi? Kart 0 damgaya sıfırlanacaktır.')) {
         try {
           const userRef = window.doc(window.db, "customers", userId);
           await window.updateDoc(userRef, {
-            stamps: 1,
+            stamps: 0,
             lastVisit: new Date().toISOString()
           });
         } catch (err) {
