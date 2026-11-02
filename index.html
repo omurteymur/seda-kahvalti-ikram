@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SEDA İkram Kartı</title>
   
+  <!-- Telefon Maskesi Kütüphanesi -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.8/jquery.inputmask.min.js"></script>
 
@@ -206,6 +207,7 @@
 <body>
 
   <div class="container">
+    <!-- KAYIT FORMU -->
     <div id="formView">
       <div class="logo-title">SEDA İKRAM KARTI</div>
       <div class="subtitle">İkramlarınızı tanımlamak ve kartınızı oluşturmak için bilgilerinizi girin.</div>
@@ -235,6 +237,7 @@
       </form>
     </div>
 
+    <!-- DİJİTAL KART GÖRÜNÜMÜ -->
     <div id="cardView" class="card-view">
       <div class="logo-title">SEDA İKRAM KARTI</div>
       <div class="user-welcome" id="displayTitle">Hoş Geldiniz</div>
@@ -255,8 +258,7 @@
   </div>
 
   <script>
-    $(document).ready(function(){
-      $('#phone').inputmask("0 (599) 999 99 99", {
+    $(document).ready(function(){$('#phone').inputmask("0 (599) 999 99 99", {
         clearIncomplete: false,
         showMaskOnHover: false,
         showMaskOnFocus: true
@@ -282,7 +284,7 @@
         fullName: fullName,
         phone: rawPhone,
         company: company,
-        stamps: 1,
+        stamps: 0, // Yeni kayıtlarda 0 damga ile başlar
         createdAt: new Date().toISOString()
       };
 
@@ -296,63 +298,4 @@
 
         listenToUserCard(userId);
       } catch (err) {
-        console.error("Kayıt hatası:", err);
-        alert("Bir bağlantı hatası oluştu, lütfen tekrar deneyin.");
-      }
-    });
-
-    function listenToUserCard(userId) {
-      document.getElementById('formView').style.display = 'none';
-      document.getElementById('cardView').style.display = 'block';
-
-      const userRef = window.doc(window.db, "customers", userId);
-
-      window.onSnapshot(userRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          document.getElementById('displayTitle').innerText = data.fullName;
-          document.getElementById('displayCompany').innerText = data.company;
-
-          updateStampsUI(data.stamps || 1);
-        }
-      });
-    }
-
-    // SOLDA ÇATAL, ORTADA RENKLİ YEMEK TABAĞI, SAĞDA BIÇAK DİZİLİMİ
-    const plateSvg = `
-      <div class="plate-icon">
-        <svg width="10" height="20" viewBox="0 0 24 24" fill="none" stroke="#2C5E3B" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M8 2v6a4 4 0 0 0 4 4M16 2v6a4 4 0 0 1-4 4"/></svg>
-        <span>🥘</span>
-        <svg width="10" height="20" viewBox="0 0 24 24" fill="none" stroke="#2C5E3B" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M12 2a6 6 0 0 1 6 6v4h-6"/></svg>
-      </div>
-    `;
-
-    function updateStampsUI(count) {
-      for (let i = 1; i <= 5; i++) {
-        const box = document.getElementById(`stamp${i}`);
-        if (i <= count) {
-          box.classList.add('filled');
-          box.innerHTML = plateSvg;
-        } else {
-          box.classList.remove('filled');
-          box.innerHTML = i;
-        }
-      }
-
-      const rewardBanner = document.getElementById('rewardBanner');
-      if (count >= 5) {
-        rewardBanner.style.display = 'block';
-      } else {
-        rewardBanner.style.display = 'none';
-      }
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const savedUserId = localStorage.getItem('seda_user_id');
-      if (savedUserId) {
-        listenToUserCard(savedUserId);
-      }
-    });
-  </script>
-</body>
-</html>
+        console.error("Kayıt hat
