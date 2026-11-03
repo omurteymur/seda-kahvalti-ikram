@@ -164,6 +164,17 @@
       margin-top: 4px;
     }
 
+    .badge-reward-count {
+      display: inline-block;
+      background-color: #E0F2FE;
+      color: #0369A1;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-top: 4px;
+    }
+
     .stamps-container {
       display: flex;
       align-items: center;
@@ -424,6 +435,7 @@
         card.className = 'customer-card';
 
         const stampsCount = user.stamps !== undefined ? user.stamps : 0;
+        const totalRewards = user.totalRewards || 0;
         let stampsHtml = '';
 
         for (let i = 1; i <= 5; i++) {
@@ -436,7 +448,7 @@
 
         let buttonHtml = '';
         if (stampsCount >= 5) {
-          buttonHtml = `<button class="btn-reward" onclick="resetStamps('${user.id}')">🎁 İkram Verildi (Sıfırla)</button>`;
+          buttonHtml = `<button class="btn-reward" onclick="resetStamps('${user.id}', ${totalRewards})">🎁 İkram Verildi (Sıfırla)</button>`;
         } else {
           buttonHtml = `<button class="btn-action" onclick="addStamp('${user.id}', ${stampsCount})">+1 Menü Ekle</button>`;
         }
@@ -452,12 +464,14 @@
 
         const isAbsent = isAbsentMoreThan7Days(user.lastVisit || user.createdAt);
         const absentBadge = isAbsent ? `<div class="badge-absent">⚠️ 7+ Gündür Ziyaret Etmedi</div>` : '';
+        const rewardCountBadge = `<div class="badge-reward-count">🎁 Toplam İkram: ${totalRewards} Kez Alındı</div>`;
 
         card.innerHTML = `
           <div class="customer-info">
             <h3>${user.fullName || 'İsimsiz'}</h3>
             <p>📱 Telefon: ${formatPhoneDisplay(user.phone)}</p>
             <p>🏢 Kurum: ${user.company || 'Belirtilmedi'}</p>
+            <div>${rewardCountBadge}</div>
             ${absentBadge}
           </div>
           <div class="stamps-container">
@@ -498,13 +512,14 @@
       }
     };
 
-    // SIFIRLANDIĞINDA 0 DAMGAYA ÇEKER
-    window.resetStamps = async function(userId) {
-      if (confirm('İkram müşteriye teslim edildi mi? Kart 0 damgaya sıfırlanacaktır.')) {
+    // SIFIRLARKEN TOPLAM İKRAM SAYISINI +1 ARTIRIR
+    window.resetStamps = async function(userId, currentTotalRewards) {
+      if (confirm('İkram müşteriye teslim edildi mi? Kart sıfırlanıp müşterinin toplam ikram hanesine +1 eklenecektir.')) {
         try {
           const userRef = window.doc(window.db, "customers", userId);
           await window.updateDoc(userRef, {
             stamps: 0,
+            totalRewards: (currentTotalRewards || 0) + 1,
             lastVisit: new Date().toISOString()
           });
         } catch (err) {
