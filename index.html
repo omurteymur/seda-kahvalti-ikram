@@ -35,6 +35,7 @@
       width: 100%;
       box-shadow: 0 10px 25px rgba(0,0,0,0.08);
       text-align: center;
+      position: relative;
     }
 
     .logo-title {
@@ -154,6 +155,13 @@
       border-color: var(--primary);
       background-color: #E8F5E9;
       color: var(--primary);
+      animation: popIn 0.4s ease-out forwards;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
     }
 
     .plate-icon {
@@ -175,11 +183,29 @@
       font-size: 14px;
       line-height: 1.5;
     }
+
+    /* NFC Uyarı Bildirimi */
+    .nfc-alert {
+      position: absolute;
+      top: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--primary);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 14px;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: none;
+      z-index: 100;
+    }
   </style>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, onSnapshot, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDummyKeyForSedaKahvaltiApp",
@@ -198,12 +224,14 @@
     window.setDoc = setDoc;
     window.onSnapshot = onSnapshot;
     window.getDoc = getDoc;
+    window.updateDoc = updateDoc;
   </script>
 </head>
 <body>
 
+  <div id="nfcAlert" class="nfc-alert">🎉 Dijital Mühür Basıldı!</div>
+
   <div class="container">
-    <!-- KAYIT FORMU -->
     <div id="formView">
       <div class="logo-title">SEDA İKRAM KARTI</div>
       <div class="subtitle">İkramlarınızı tanımlamak ve kartınızı oluşturmak için bilgilerinizi girin.</div>
@@ -233,7 +261,6 @@
       </form>
     </div>
 
-    <!-- DİJİTAL KART GÖRÜNÜMÜ -->
     <div id="cardView" class="card-view">
       <div class="logo-title">SEDA İKRAM KARTI</div>
       <div class="user-welcome" id="displayTitle">Hoş Geldiniz</div>
@@ -261,21 +288,11 @@
       if (x.length > 11) x = x.substring(0, 11);
 
       let formatted = '';
-      if (x.length > 0) {
-        formatted = x.substring(0, 1);
-      }
-      if (x.length > 1) {
-        formatted += ' (' + x.substring(1, 4);
-      }
-      if (x.length >= 4) {
-        formatted += ') ' + x.substring(4, 7);
-      }
-      if (x.length >= 7) {
-        formatted += ' ' + x.substring(7, 9);
-      }
-      if (x.length >= 9) {
-        formatted += ' ' + x.substring(9, 11);
-      }
+      if (x.length > 0) formatted = x.substring(0, 1);
+      if (x.length > 1) formatted += ' (' + x.substring(1, 4);
+      if (x.length >= 4) formatted += ') ' + x.substring(4, 7);
+      if (x.length >= 7) formatted += ' ' + x.substring(7, 9);
+      if (x.length >= 9) formatted += ' ' + x.substring(9, 11);
 
       e.target.value = formatted;
     });
@@ -363,10 +380,74 @@
       }
     }
 
+    // NFC MÜHÜR DİNLEYİCİSİ VE KONTROLÜ
+    async function processNfcStamp(userId) {
+      // Linkteki parametreyi temizle (sayfa yenilendiğinde tekrar damga basmasın)
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      try {
+        const userRef = window.doc(window.db, "customers", userId);
+        const docSnap = await window.getDoc(userRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const currentStamps = data.stamps !== undefined ? data.stamps : 0;
+
+          if (currentStamps >= 5) {
+            alert("Mevcut kartınız 5 ikrama ulaştı! Hediye menünüzü alıp kartınızı sıfırlatınız.");
+            return;
+          }
+
+          // 4 Saatlik Güvenlik Kilidi (Spam Engelleme)
+          const lastVisitStr = data.lastVisit || data.createdAt;
+          if (lastVisitStr) {
+            const lastVisit = new Date(lastVisitStr);
+            const now = new Date();
+            const diffHours = (now - lastVisit) / (1000 * 60 * 60);
+
+            if (diffHours < 4 && currentStamps > 0) {
+              alert("Bu öğün için damganızı zaten aldınız! Yeni mühür için lütfen daha sonra tekrar deneyin.");
+              return;
+            }
+          }
+
+          // Güvenlik kilidini geçtiyse +1 damga ekle
+          await window.updateDoc(userRef, {
+            stamps: currentStamps + 1,
+            lastVisit: new Date().toISOString()
+          });
+
+          // Başarı animasyonu göster
+          const alertBox = document.getElementById('nfcAlert');
+          alertBox.style.display = 'block';
+          setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
+        }
+      } catch (err) {
+        console.error("NFC Damga Hatası:", err);
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       const savedUserId = localStorage.getItem('seda_user_id');
+      
+      // URL'de "?nfc=seda2026" parametresi var mı kontrol et
+      const urlParams = new URLSearchParams(window.location.search);
+      const isNfcTriggered = urlParams.get('nfc') === 'seda2026';
+
       if (savedUserId) {
         listenToUserCard(savedUserId);
+        
+        // Kullanıcı giriş yapmış ve NFC etiketi okutmuşsa
+        if (isNfcTriggered) {
+          setTimeout(() => {
+            processNfcStamp(savedUserId);
+          }, 1000); // Sistem yüklendikten 1 saniye sonra mühürü vur
+        }
+      } else {
+        // Kullanıcı giriş yapmamış ama NFC'ye okutmuşsa uyar
+        if (isNfcTriggered) {
+          alert("İkram kazanmak için lütfen önce kartınızı oluşturun.");
+        }
       }
     });
   </script>
